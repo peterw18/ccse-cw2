@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checkout</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="../static/script.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="../static/styles.css">
+</head>
+<body>
+    {% include 'header.html' %}
+
+    <div class="alert alert-success text-center" id="confirmBox">
+        <h2>🎉 Order Placed Successfully!</h2>
+        <p>Thank you for your purchase. Your order has been confirmed.</p>
+    </div>
+
+    <div class="container mt-5">
+        <div class="row">
+            <!-- Checkout Form -->
+            <div class="col-md-7">
+                <h2>Checkout</h2>
+                <form method="POST" action="{{ url_for('checkout') }}">
+                    <h4>Address Details</h4>
+                    <div class="row mb-3">
+                        <!-- First Column: Address Line 1, 2, and 3 -->
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="address-line1" class="form-label">Address Line 1</label>
+                                <input type="text" class="form-control" id="address-line1" name="addr_l1" value="{{ addr_l1 }}" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="address-line2" class="form-label">Address Line 2</label>
+                                <input type="text" class="form-control" id="address-line2" name="addr_l2" value="{{ addr_l2 }}">
+                            </div>
+                            <div class="mb-3">
+                                <label for="address-line3" class="form-label">Address Line 3</label>
+                                <input type="text" class="form-control" id="address-line3" name="addr_l3" value="{{ addr_l3 }}">
+                            </div>
+                        </div>
+
+                        <!-- Second Column: City, County, and Postcode -->
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="city" class="form-label">City</label>
+                                <input type="text" class="form-control" id="city" name="addr_city" value="{{ addr_city }}" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="county" class="form-label">County</label>
+                                <input type="text" class="form-control" id="county" name="addr_county" value="{{ addr_county }}">
+                            </div>
+                            <div class="mb-3">
+                                <label for="postcode" class="form-label">Postcode</label>
+                                <input type="text" class="form-control" id="postcode" name="addr_postcode" value="{{ addr_postcode }}" required>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-check mb-3">
+                        <input type="checkbox" class="form-check-input" id="save-address" name="save_address" {% if addr_save == 1 %}checked{% endif %}>
+                        <label class="form-check-label" for="save-address">Save this address for next time</label>
+                    </div>
+
+                    <h4>Payment Details</h4>
+                    <div class="mb-3 position-relative">
+                        <label for="card-number" class="form-label">Card Number</label>
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="card-number" name="payment_num" value="{{ payment_num }}" placeholder="**** **** **** ****" valuerequired>
+                            <img id="card-logo" class="card-logo" src="" alt="Card Logo">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="expiry" class="form-label">Expiry Date</label>
+                            <input type="text" class="form-control" id="expiry" name="payment_exp" placeholder="MM/YY" value="{{ payment_exp }}" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="cvv" class="form-label">CVV</label>
+                            <input type="text" class="form-control" id="cvv" name="payment_cvv" placeholder="***" required>
+                        </div>
+                    </div>
+                    <div class="form-check mb-3">
+                        <input type="checkbox" class="form-check-input" id="save-payment" name="save_payment" {% if payment_save == 1 %}checked{% endif %}>
+                        <label class="form-check-label" for="save-payment">Save payment details for next time</label>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">Place Order</button>
+                </form>
+            </div>
+            
+            <!-- Order Summary -->
+            <div class="col-md-5">
+                <div class="card">
+                    <div class="card-header bg-dark text-white">
+                        Order Summary
+                    </div>
+                    <div class="card-body">
+                        <ul class="list-group mb-3">
+                            {% for item in basketItems %}
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <img src="../static/uploads/{{ item.image }}" id="checkoutImg">
+                                {{ item.name }} (x{{ item.quantity }})
+                                <span>£{{ "%.2f"|format((item.price * item.quantity) / 100) }}</span>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                        <h5 class="d-flex justify-content-between">
+                            <span>Total:</span>
+                            <strong>£{{ subtotal }}</strong>
+                        </h5>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script src="../static/cardValidation.js"></script>
+
+    <script>
+        let type = '{{ state }}';
+
+        if (type == 'confirmed'){
+            let inputs = document.getElementsByTagName("input");
+            for (let i=0; i<inputs.length; i++){
+                inputs[i].disabled = true;
+            }
+
+            let buttons = document.getElementsByTagName("button");
+            for (let i=0; i<buttons.length; i++){
+                buttons[i].disabled = true;
+            }
+
+            document.getElementById("confirmBox").style.display = 'block';
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,13 @@
+<div id="header">
+    <a href="{{ url_for('index') }}"><img src="../static/resources/logo-600-with-text.png"/></a>
+    <div id="menu">
+        <div class="menuItem"><a href="{{ url_for('index') }}">Home</a></div>
+        <div class="menuItem"><a href="{{ url_for('basket') }}">Basket ({{ session['basket'].values() | sum }})</a></div>
+        {% if 'username' in session and 'privilege' in session %}
+            <div class="menuItem"><a href="{{ url_for('account') }}">Account</a></div>
+            <div class="menuItem"><a href="{{ url_for('logout') }}">Log Out</a></div>
+        {% else %}
+            <div class="menuItem"><a href="{{ url_for('login') }}">Login</a></div>
+        {% endif %}
+    </div>
+</div>

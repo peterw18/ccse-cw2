@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add New Product</title>
+</head>
+<body>
+    <form action="{{ url_for('addItem') }}" method="post" enctype="multipart/form-data">
+        <label>Item name : </label>   
+        <input type="text" placeholder="Enter name" name="name" autocomplete="off"/>  
+        <label>Item desc. : </label>   
+        <textarea type="text" placeholder="Enter desc" name="description" autocomplete="off"></textarea> 
+        <label>Item price : </label>   
+        <input type="number" placeholder="Enter price in pennies" name="price" autocomplete="off"/> 
+        <label>Item stock : </label>   
+        <input type="number" placeholder="Enter stock" name="stock" autocomplete="off"/>
+        <label>Item image : </label>   
+        <input type="file" accept="image/*" name="image" autocomplete="off"/>
+        <button type="submit">Add to shop</button>
+    </form>
+</body>
+</html>

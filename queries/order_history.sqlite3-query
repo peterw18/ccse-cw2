@@ -1,0 +1,20 @@
+-- database: ../app.db
+SELECT
+    o.orderid,
+    o.placed_at,
+    o.address,
+    o.cost,
+    o.status,
+    oi.productid,
+    oi.quantity,
+    p.name,
+    p.price,
+    p.image
+FROM
+    orders AS o
+    INNER JOIN orderitems AS oi ON o.orderid = oi.orderid
+    INNER JOIN products AS p ON p.itemid = oi.productid
+    INNER JOIN users AS u ON u.userid = o.userid
+WHERE
+    u.username = 'peterw18'
+    ;
