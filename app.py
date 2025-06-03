@@ -191,7 +191,7 @@ def login():
         cursor = conn.cursor()
 
         try:
-            cursor.execute(f"SELECT hash, privilege FROM users WHERE username = '{username}';")
+            cursor.execute("SELECT hash, privilege FROM users WHERE username = ?;", (username,))
             resp = cursor.fetchone()
             print(resp)
             pswdBytes = password.encode('utf-8')
@@ -224,7 +224,7 @@ def register():
             conn = get_db_connection()
             cursor = conn.cursor()
             try:
-                cursor.execute(f"SELECT 1 FROM users WHERE username = '{username}' LIMIT 1;")
+                cursor.execute(f"SELECT 1 FROM users WHERE username = ? LIMIT 1;", (username,))
                 resp = cursor.fetchone()
                 if resp:
                     return render_template('register.html', msg="Error: username already exists")
