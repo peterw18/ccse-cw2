@@ -116,7 +116,7 @@ def displayProduct():
     cursor = conn.cursor()
 
     try:
-        cursor.execute(f"SELECT * FROM products WHERE itemid={id} LIMIT 1;")
+        cursor.execute(f"SELECT * FROM products WHERE itemid = ? LIMIT 1;", (id,))
         resp = cursor.fetchone()
         if resp:
             return render_template('product.html',
