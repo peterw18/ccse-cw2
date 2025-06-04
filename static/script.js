@@ -1,40 +1,42 @@
-function sanitizeObject(obj) {
-    if (Array.isArray(obj)) {
-        return obj.map(sanitizeObject);
-    } else if (obj !== null && typeof obj === "object") {
-        const sanitized = {};
-        for (const key in obj) {
-            if (obj.hasOwnProperty(key)) {
-                sanitized[key] = sanitizeObject(obj[key]);
+function loadProductGrid() {
+    fetch("/api/products")
+        .then(response => response.json())
+        .then(data => {
+            if (!Array.isArray(data)) {
+                throw new Error("Invalid data format: Expected an array");
             }
-        }
-        return sanitized;
-    } else if (typeof obj === "string") {
-        return DOMPurify.sanitize(obj);
-    }
-    return obj;
+
+            const container = document.getElementById("productContainer");
+            container.innerHTML = "";
+
+            data.forEach(product => {
+                const card = document.createElement("div");
+                card.className = "product-card";
+                card.id = product.itemid;
+
+                card.addEventListener("click", () => openProductPage(product.itemid));
+
+                const img = document.createElement("img");
+                img.src = `../static/uploads/${encodeURIComponent(product.image)}`;
+                img.alt = product.name;
+
+                const title = document.createElement("h3");
+                title.textContent = product.name;
+
+                const price = document.createElement("h5");
+                price.style.float = "right";
+                price.textContent = `£${(product.price / 100).toFixed(2)}`;
+
+                card.appendChild(img);
+                card.appendChild(title);
+                card.appendChild(price);
+
+                container.appendChild(card);
+            });
+        })
+        .catch(error => console.error("Error loading products:", error));
 }
 
-function loadProductGrid(){
-    fetch("/api/products")
-    .then(response => response.json())
-    .then(data => {
-        if (!Array.isArray(data)) {
-            throw new Error("Invalid data format: Expected an array");
-        }
-        var sanitizedData = sanitizeObject(data);
-
-        const container = document.getElementById("productContainer");
-        container.innerHTML = sanitizedData.map(product => `
-            <div class="product-card" id="${product.itemid}" onclick="openProductPage(${product.itemid})">
-                <img src="../static/uploads/${product.image}" alt="${product.name}">
-                <h3>${product.name}</h3>
-                <h5 style="float: right;">£${(product.price/100).toFixed(2)}</h5>
-            </div>
-        `).join("");
-    })
-    .catch(error => console.error("Error loading products:", error));
-    }
 
 function openProductPage(id){
     window.location.href = "/product?id=" + id;
