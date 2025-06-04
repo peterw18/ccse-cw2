@@ -58,7 +58,7 @@ jobs:
           name: python-app
           path: |
             .
-
+            !antenv/
   deploy:
     permissions:
       contents: none
