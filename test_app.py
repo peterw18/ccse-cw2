@@ -238,7 +238,7 @@ class TestApp:
 
         # Verify order in database
         cursor = db_conn.cursor()
-        cursor.execute(f"SELECT userid, address, cost, status FROM orders WHERE userid = {user_id};")
+        cursor.execute(f"SELECT userid, cost, status FROM orders WHERE userid = {user_id};")
         order = cursor.fetchone()
         assert order is not None
         assert order[0] == user_id
