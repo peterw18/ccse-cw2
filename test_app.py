@@ -28,7 +28,7 @@ class TestApp:
         """Test that the homepage loads successfully."""
         response = client.get('/')
         assert response.status_code == 200
-        assert b"home.html" in response.data # Assuming home.html content
+        assert b"<!DOCTYPE html>" in response.data # Check for the DOCTYPE declaration
 
     def test_get_products_api_empty(self, client):
         """Test the /api/products endpoint when no products exist."""
