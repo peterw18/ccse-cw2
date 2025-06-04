@@ -1,28 +1,30 @@
 # conftest.py
 import pytest
-from app import app # Import the Flask app instance
+from app import app, get_db_connection as original_app_get_db_connection # Import the Flask app instance and the original function
 import sqlite3
 from unittest.mock import patch # Import patch for mocking
 
-# This fixture will provide the Flask test client and ensure the in-memory DB setup
 @pytest.fixture
 def client():
     app.config['TESTING'] = True
     app.config['WTF_CSRF_ENABLED'] = False
     app.config['DEBUG'] = False
 
-    # Create an in-memory connection *once* for this test run for the client
-    # This connection will be the shared one for all database operations during the test.
+    # Create a single in-memory connection for this test run
     in_memory_conn = sqlite3.connect(":memory:")
 
-    # Patch get_db_connection in the 'app' module to return this specific in-memory connection
-    # This ensures any calls to get_db_connection throughout your app code during tests
-    # will use this in-memory database.
+    # Store the original get_db_connection function to restore it later
+    # This handles cases where get_db_connection might be accessed as app.get_db_connection
+    # even if it's a global function in app.py
+    original_get_db_conn_attribute = getattr(app, 'get_db_connection', None)
+    app.get_db_connection = lambda: in_memory_conn # Temporarily assign a lambda to app.get_db_connection
+
+    # Patch the global get_db_connection function in the 'app' module.
+    # This catches calls like 'get_db_connection()' directly in app.py or 'from app import get_db_connection' imports.
     with patch('app.get_db_connection', return_value=in_memory_conn):
         with app.test_client() as test_client:
             with app.app_context():
                 # Set up the database schema in the in-memory database
-                # This ensures tables exist for tests before any operations
                 cursor = in_memory_conn.cursor()
                 cursor.execute("""
                     CREATE TABLE IF NOT EXISTS products (
@@ -76,7 +78,6 @@ def client():
                 in_memory_conn.commit()
 
                 # IMPORTANT: Clear tables for each test to ensure isolation.
-                # The 'client' fixture is typically run once per test function that uses it.
                 cursor.execute("DELETE FROM products;")
                 cursor.execute("DELETE FROM users;")
                 cursor.execute("DELETE FROM orders;")
@@ -85,17 +86,20 @@ def client():
 
             yield test_client # Yield the test client for the test function to use
 
-    # This block runs after the test function finishes (teardown)
-    # Ensure the in-memory connection is closed when the fixture scope ends
+    # Clean up after tests: restore original app.get_db_connection attribute
+    if original_get_db_conn_attribute is not None:
+        app.get_db_connection = original_get_db_conn_attribute
+    else:
+        # If it wasn't originally an attribute, delete the one we added
+        if hasattr(app, 'get_db_connection'):
+            del app.get_db_connection
+
+    # Close the in-memory connection
     in_memory_conn.close()
 
-# This fixture provides a direct connection to the test database for test data setup.
-# It now implicitly uses the *same* mocked in-memory connection that 'client' sets up.
 @pytest.fixture
 def db_conn(client): # Depend on 'client' fixture to ensure it runs first and sets up the mock
-    # Because 'app.get_db_connection' is patched, calling it here will return
-    # the same in_memory_conn that 'client' set up.
-    # No need to store in app.config as patch handles it.
+    # This will now correctly return the in-memory connection, whether accessed via
+    # app.get_db_connection or the patched global function.
     conn = app.get_db_connection()
     yield conn
-    # The connection is managed and closed by the 'client' fixture, so no explicit close here.

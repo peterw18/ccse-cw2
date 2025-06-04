@@ -206,7 +206,8 @@ def login():
         try:
             cursor.execute("SELECT hash, privilege FROM users WHERE username = ?;", (username,))
             resp = cursor.fetchone()
-            print(resp)
+            if not resp:
+                return render_template('login.html', msg="Error: incorrect username or password")
             pswdBytes = password.encode('utf-8')
             result = bcrypt.checkpw(pswdBytes, resp[0])
             if not result:
