@@ -1,7 +1,26 @@
+function isValidProduct(product) {
+    return (
+        typeof product.itemid === "number" &&
+        typeof product.name === "string" &&
+        typeof product.price === "number" &&
+        typeof product.image === "string"
+    );
+}
+
 function loadProductGrid(){
     fetch("/api/products")
     .then(response => response.json())
     .then(data => {
+        if (!Array.isArray(data)) {
+            throw new Error("Invalid data format: Expected an array");
+        }
+
+        const validProducts = data.filter(isValidProduct);
+
+        if (validProducts.length !== data.length) {
+            console.warn("Some products were invalid and skipped");
+        }
+
         const container = document.getElementById("productContainer");
         container.innerHTML = data.map(product => `
             <div class="product-card" id="${product.itemid}" onclick="openProductPage(${product.itemid})">
