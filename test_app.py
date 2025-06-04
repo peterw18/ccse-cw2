@@ -22,6 +22,7 @@ def add_user(db_conn, username, password, privilege="user"):
     cursor.execute("INSERT INTO users (username, hash, privilege) VALUES (?, ?, ?);",
                    (username, hashed_password, privilege))
     db_conn.commit()
+    return cursor.lastrowid
 
 class TestApp:
 
