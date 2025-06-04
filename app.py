@@ -56,7 +56,7 @@ def initialize_session():
 def add_headers(response):
     response.headers['Content-Security-Policy'] = (
         "default-src 'self'; "
-        "script-src 'self' cdn.jsdelivr.net; "
+        "script-src 'self' cdn.jsdelivr.net; 'nonce-KApDkGgTGfjMjshXXvdGEMDfoUWcgV'"
         "style-src 'self' cdn.jsdelivr.net; "
         "img-src 'self' data:; "
         "object-src 'none'; "
