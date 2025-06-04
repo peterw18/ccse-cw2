@@ -230,8 +230,8 @@ class TestApp:
             'payment_num': '1234567890123456',
             'payment_exp': '12/25',
             'payment_cvv': '123',
-            'save_address': 'on',
-            'save_payment': 'on'
+            'save_address': 1,
+            'save_payment': 1
         })
         assert response.status_code == 200
         assert b"Order Placed" in response.data # This assertion is crucial for confirming the state
