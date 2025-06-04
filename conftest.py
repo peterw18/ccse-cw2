@@ -8,7 +8,7 @@ from unittest.mock import patch
 # This allows multiple connections to the same in-memory database within a single test,
 # simulating real-world database usage where multiple connections might be active
 # but all interact with the same underlying data.
-IN_MEMORY_DB_NAME = ":memory:test_db"
+IN_MEMORY_DB_NAME = ":memory:"
 
 @pytest.fixture
 def client():
