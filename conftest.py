@@ -3,6 +3,7 @@ import pytest
 from app import app, get_db_connection
 import sqlite3
 import os
+from unittest.mock import patch
 
 @pytest.fixture
 def client():
@@ -12,6 +13,11 @@ def client():
 
     # Use an in-memory database for testing
     app.config['DATABASE'] = ':memory:'
+
+    with patch('app.get_db_connection') as mock_get_db_connection:
+    # Create a real in-memory connection to use for the mock
+        in_memory_conn = sqlite3.connect(":memory:")
+        mock_get_db_connection.return_value = in_memory_conn
     
     with app.test_client() as client:
         with app.app_context():
@@ -75,6 +81,9 @@ def client():
 def db_conn():
     # This fixture provides a direct connection to the test database
     # for inserting test data directly.
-    conn = sqlite3.connect(":memory:")
-    yield conn
-    conn.close()
+    with patch('app.get_db_connection') as mock_get_db_connection:
+        in_memory_conn = sqlite3.connect(":memory:")
+        mock_get_db_connection.return_value = in_memory_conn
+        # Ensure the mock is active before the client is yielded
+        yield in_memory_conn
+        in_memory_conn.close()
