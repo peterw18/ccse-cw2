@@ -8,7 +8,10 @@ from unittest.mock import patch
 # This allows multiple connections to the same in-memory database within a single test,
 # simulating real-world database usage where multiple connections might be active
 # but all interact with the same underlying data.
-IN_MEMORY_DB_NAME = ":memory:"
+# Using 'file::memory:test_db?cache=shared' explicitly names the in-memory database
+# and ensures sharing across connections, which might also prevent Pytest from
+# misinterpreting it as a direct file path for cleanup.
+IN_MEMORY_DB_NAME = "file::memory:test_db?cache=shared"
 
 @pytest.fixture
 def client():
@@ -18,14 +21,14 @@ def client():
 
     # This will establish an initial connection for setting up the database schema.
     # It's crucial to keep this connection open while schema setup and initial data loading occur.
-    initial_conn = sqlite3.connect(IN_MEMORY_DB_NAME, check_same_thread=False)
+    initial_conn = sqlite3.connect(IN_MEMORY_DB_NAME, uri=True, check_same_thread=False)
 
     # Define the mock function that will be used to replace app.get_db_connection.
     # This function will return a NEW connection object to the SAME named in-memory database
     # every time it is called. This prevents 'Cannot operate on a closed database' errors
     # if app.py closes connections after use, as each call gets a unique connection object.
     def mock_get_db_connection():
-        return sqlite3.connect(IN_MEMORY_DB_NAME, check_same_thread=False)
+        return sqlite3.connect(IN_MEMORY_DB_NAME, uri=True, check_same_thread=False)
 
     # IMPORTANT: Monkey-patch the Flask app instance's 'get_db_connection' attribute first.
     # This handles cases where the code under test might be looking for `app.get_db_connection`
@@ -97,7 +100,7 @@ def client():
 
                 # Clear tables before each test to ensure test isolation.
                 # Open a separate connection for clearing to mimic app behavior and avoid closing 'initial_conn'.
-                clean_conn = sqlite3.connect(IN_MEMORY_DB_NAME, check_same_thread=False)
+                clean_conn = sqlite3.connect(IN_MEMORY_DB_NAME, uri=True, check_same_thread=False)
                 clean_cursor = clean_conn.cursor()
                 clean_cursor.execute("DELETE FROM products;")
                 clean_cursor.execute("DELETE FROM users;")
