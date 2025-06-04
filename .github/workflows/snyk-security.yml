@@ -51,8 +51,14 @@ jobs:
           # This is where you will need to introduce the Snyk API token created with your Snyk account
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
 
-      - name: Test token
-        run: echo $SNYK_TOKEN
+      - name: Check if SNYK_TOKEN is set
+        run: |
+          if [ -z "$SNYK_TOKEN" ]; then
+            echo "SNYK_TOKEN is NOT set"
+            exit 1
+          else
+            echo "SNYK_TOKEN is set"
+          fi
 
         # Runs Snyk Code (SAST) analysis and uploads result into GitHub.
         # Use || true to not fail the pipeline        
