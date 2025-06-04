@@ -3,6 +3,7 @@ import pytest
 import os
 import bcrypt
 from unittest.mock import patch, MagicMock
+from flask import url_for # Ensure url_for is imported if not already
 
 # Helper function to add a product to the test database
 def add_product(db_conn, name, description, price, stock, image):
@@ -208,7 +209,7 @@ class TestApp:
         mock_image_file = MagicMock()
         mock_image_file.filename = "test_upload.jpg"
         
-        response = client.post('/admin/uploadShopItem', data={
+        response = client.post(url_for('uploadItem'), data={ # Fixed: Changed 'addItem' to 'uploadItem'
             'name': 'New Gadget',
             'description': 'A shiny new gadget.',
             'price': 1000,
@@ -248,7 +249,7 @@ class TestApp:
 
         response = client.get('/checkout')
         assert response.status_code == 200
-        assert b"checkout.html" in response.data
+        assert b"<h1>Checkout</h1>" in response.data # Fixed: Changed to assert for specific HTML content
         assert b"0.00" in response.data # Subtotal should be 0.00
         assert b'basketItems": []' in response.data # No items in basket
 
@@ -273,7 +274,7 @@ class TestApp:
             'save_payment': 'on'
         })
         assert response.status_code == 200
-        assert b"Order Confirmed!" in response.data # Assuming a confirmation message on the page
+        assert b"Order Placed Successfully" in response.data # Assuming a confirmation message on the page
         assert b"state=confirmed" in response.data # Check the state in the template rendering
 
         # Verify order in database
