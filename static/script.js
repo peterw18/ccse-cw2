@@ -1,10 +1,18 @@
-function isValidProduct(product) {
-    return (
-        typeof product.itemid === "number" &&
-        typeof product.name === "string" &&
-        typeof product.price === "number" &&
-        typeof product.image === "string"
-    );
+function sanitizeObject(obj) {
+    if (Array.isArray(obj)) {
+        return obj.map(sanitizeObject);
+    } else if (obj !== null && typeof obj === "object") {
+        const sanitized = {};
+        for (const key in obj) {
+            if (obj.hasOwnProperty(key)) {
+                sanitized[key] = sanitizeObject(obj[key]);
+            }
+        }
+        return sanitized;
+    } else if (typeof obj === "string") {
+        return DOMPurify.sanitize(obj);
+    }
+    return obj;
 }
 
 function loadProductGrid(){
@@ -14,19 +22,14 @@ function loadProductGrid(){
         if (!Array.isArray(data)) {
             throw new Error("Invalid data format: Expected an array");
         }
-
-        const validProducts = data.filter(isValidProduct);
-
-        if (validProducts.length !== data.length) {
-            console.warn("Some products were invalid and skipped");
-        }
+        var sanitizedData = sanitizeObject(data);
 
         const container = document.getElementById("productContainer");
-        container.innerHTML = validProducts.map(product => `
-            <div class="product-card" id="${DOMPurify.sanitize(product.itemid)}" onclick="openProductPage(${DOMPurify.sanitize(product.itemid)})">
-                <img src="../static/uploads/${DOMPurify.sanitize(product.image)}" alt="${DOMPurify.sanitize(product.name)}">
-                <h3>${DOMPurify.sanitize(product.name)}</h3>
-                <h5 style="float: right;">£${DOMPurify.sanitize((product.price/100).toFixed(2))}</h5>
+        container.innerHTML = sanitizedData.map(product => `
+            <div class="product-card" id="${product.itemid}" onclick="openProductPage(${product.itemid})">
+                <img src="../static/uploads/${product.image}" alt="${product.name}">
+                <h3>${product.name}</h3>
+                <h5 style="float: right;">£${(product.price/100).toFixed(2)}</h5>
             </div>
         `).join("");
     })
