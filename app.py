@@ -1,5 +1,4 @@
 from flask import Flask, render_template, request, session, redirect, url_for, jsonify
-import logging
 import os
 import sqlite3
 import random
@@ -343,3 +342,7 @@ def account():
             {"orderid": row[0], "placed_at": row[1], "address": row[2], "cost": row[3], "status": row[4], }
             for row in cursor.fetchall()
         ]
+
+
+if __name__ == "__main__":
+    app.run()
