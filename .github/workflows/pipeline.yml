@@ -195,3 +195,13 @@ jobs:
         with:
           app-name: ${{ env.AZURE_WEBAPP_NAME }}
           publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+
+  zap-dast:
+    needs: deploy
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: ZAP Scan
+        uses: zaproxy/action-full-scan@v0.12.0
+        with:
+          target: ${{ vars.AZURE_URL }}
