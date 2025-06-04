@@ -244,8 +244,8 @@ class TestApp:
         print(order)
         assert order is not None
         assert order[0] == user_id
-        assert order[2] == 5000 # 2 items * 2500 cents
-        assert order[3] == "ORDERED"
+        assert order[1] == 5000
+        assert order[2] == "ORDERED"
 
     # Test the add_headers security measures (basic check)
     def test_security_headers(self, client):
