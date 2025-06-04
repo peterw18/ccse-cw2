@@ -7,7 +7,7 @@ import json
 import bcrypt
 
 app = Flask(__name__, static_url_path='/static')
-app.secret_key = 'BAD_SECRET_KEY'
+app.secret_key = 'VdPifeYCZAvcnkgNSbiphYdqjJPuLJ'
 #''.join(random.choice(string.ascii_letters) for i in range(30))
 
 app.config['PERMANENT_SESSION_LIFETIME'] = 900 # session expiry time
