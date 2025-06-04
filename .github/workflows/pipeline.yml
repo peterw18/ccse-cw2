@@ -147,9 +147,9 @@ jobs:
           # Execute the gh api graphql command with -v for variables
           # Store the full response to handle potential errors/nulls
           FULL_API_RESPONSE=$(gh api graphql \
-            -f query="$GRAPHQL_QUERY" \
-            -v owner="${{ github.repository_owner }}" \
-            -v repo="${{ github.event.repository.name }}")
+            -F query="$GRAPHQL_QUERY" \
+            -F owner="${{ github.repository_owner }}" \
+            -F repo="${{ github.event.repository.name }}")
 
           # Check for GraphQL errors in the response
           if echo "$FULL_API_RESPONSE" | jq -e '.errors' > /dev/null; then
