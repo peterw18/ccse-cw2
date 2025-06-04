@@ -7,7 +7,7 @@ import json
 import bcrypt
 
 app = Flask(__name__, static_url_path='/static')
-app.secret_key = 'VdPifeYCZAvcnkgNSbiphYdqjJPuLJ'
+app.secret_key = 'BAD_SECRET_KEY'
 #''.join(random.choice(string.ascii_letters) for i in range(30))
 
 app.config['PERMANENT_SESSION_LIFETIME'] = 900 # session expiry time
@@ -295,8 +295,8 @@ def checkout():
         address_parts = [value for key, value in request.form.items() if key.startswith("addr_") and value.strip()]
         address =  ", ".join(address_parts)
 
-        cursor.execute("INSERT INTO orders (userid, address, cost, status) VALUES (?, ?, ?, ?) RETURNING orderid;", (userid, address, cost, "ORDERED"))
-        resp = cursor.fetchone()
+        cursor.execute("INSERT INTO orders (userid, address, cost, status) VALUES (?, ?, ?, ?)", (userid, address, cost, "ORDERED"))
+        resp = cursor.lastrowid
 
 
         # add to orderitems
