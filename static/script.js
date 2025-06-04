@@ -22,7 +22,7 @@ function loadProductGrid(){
         }
 
         const container = document.getElementById("productContainer");
-        container.innerHTML = data.map(product => `
+        container.innerHTML = validProducts.map(product => `
             <div class="product-card" id="${product.itemid}" onclick="openProductPage(${product.itemid})">
                 <img src="../static/uploads/${product.image}" alt="${product.name}">
                 <h3>${product.name}</h3>
