@@ -301,7 +301,7 @@ def checkout():
 
         # add to orderitems
         for item in session['basket'].items():
-            cursor.execute("INSERT INTO orderitems (orderid, productid, quantity) VALUES (?, ?, ?)", (resp[0], item[0], item[1]))
+            cursor.execute("INSERT INTO orderitems (orderid, productid, quantity) VALUES (?, ?, ?)", (str(resp[0]), item[0], item[1]))
             cursor.execute("UPDATE products SET stock = stock - ? WHERE itemid = ?;", (item[1], item[0]))
 
         conn.commit()
