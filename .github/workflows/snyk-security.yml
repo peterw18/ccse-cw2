@@ -59,6 +59,9 @@ jobs:
           else
             echo "SNYK_TOKEN is set"
           fi
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}  # <- This is essential
+
 
         # Runs Snyk Code (SAST) analysis and uploads result into GitHub.
         # Use || true to not fail the pipeline        
