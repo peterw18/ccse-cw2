@@ -110,11 +110,58 @@ jobs:
           path: |
             .
             !antenv/
+
+  security_gate:
+    runs-on: ubuntu-latest
+    needs: [build, codeql-analyze, snyk]
+    permissions:
+      contents: read
+      security-events: read # Required to read security alerts
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Get and Check Code Scanning Alerts
+        id: check_alerts
+        run: |
+          # Use GitHub CLI to get all open Code Scanning alerts for the current ref (branch/commit)
+          # Filtering for CRITICAL or HIGH severity alerts
+          ALERTS=$(gh api graphql -f query='
+            query($owner: String!, $repo: String!, $ref: String!) {
+              repository(owner: $owner, name: $repo) {
+                vulnerabilityAlerts(first: 100, states: OPEN, after: null) {
+                  nodes {
+                    createdAt
+                    securityVulnerability {
+                      severity
+                      package { name }
+                    }
+                    state
+                    dismissedAt
+                    dismissedBy { login }
+                    dismissedReason
+                  }
+                }
+              }
+            }' -F owner='${{ github.repository_owner }}' -F repo='${{ github.event.repository.name }}' -F ref='${{ github.ref }}' | jq -r '.data.repository.vulnerabilityAlerts.nodes[] | select(.state == "OPEN" and (.securityVulnerability.severity == "CRITICAL" or .securityVulnerability.severity == "HIGH"))')
+
+          if [ -n "$ALERTS" ]; then
+            echo "::error::Critical or High vulnerabilities found!"
+            echo "Vulnerabilities detected:"
+            echo "$ALERTS"
+            echo "::set-output name=vulnerabilities_found::true"
+            exit 1 # Fail the job if vulnerabilities are found
+          else
+            echo "No open Critical or High vulnerabilities found."
+            echo "::set-output name=vulnerabilities_found::false"
+          fi
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # GITHUB_TOKEN is automatically provided with necessary permissions
   deploy:
     permissions:
       contents: none
     runs-on: ubuntu-latest
-    needs: [build, codeql-analyze, snyk]
+    needs: security_gate
     environment:
       name: 'Development'
       url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
