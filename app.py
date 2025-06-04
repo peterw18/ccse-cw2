@@ -52,6 +52,20 @@ def initialize_session():
     if "basket" not in session:
         session["basket"] = {}
 
+@app.after_request
+def add_headers(response):
+    response.headers['Content-Security-Policy'] = (
+        "default-src 'self'; "
+        "script-src 'self'; "
+        "style-src 'self'; "
+        "img-src 'self' data:; "
+        "object-src 'none'; "
+        "base-uri 'none'; "
+        "frame-ancestors 'none';"
+    )
+    response.headers['X-Content-Type-Options'] = 'nosniff'
+    return response
+
 @app.context_processor
 def inject_session():
     return dict(session=session)
