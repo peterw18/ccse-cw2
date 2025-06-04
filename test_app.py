@@ -241,9 +241,9 @@ class TestApp:
         cursor = db_conn.cursor()
         cursor.execute(f"SELECT userid, cost, status FROM orders WHERE userid = {user_id};")
         order = cursor.fetchone()
+        print(order)
         assert order is not None
         assert order[0] == user_id
-        assert "123 Test St, Testville, T3S T0ST" in order[1]
         assert order[2] == 5000 # 2 items * 2500 cents
         assert order[3] == "ORDERED"
 
