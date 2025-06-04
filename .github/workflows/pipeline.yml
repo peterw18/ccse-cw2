@@ -124,12 +124,13 @@ jobs:
       - name: Get and Check Code Scanning Alerts
         id: check_alerts
         run: |
-          # Use GitHub CLI to get all open Code Scanning alerts for the current ref (branch/commit)
-          # Filtering for CRITICAL or HIGH severity alerts
-          ALERTS=$(gh api graphql -f query='
-            query($owner: String!, $repo: String!, $ref: String!) {
+          # Define the GraphQL query directly in the shell script
+          # Removed dismissedBy/Reason as they are not needed for OPEN alerts and caused errors
+          # Removed $ref variable as vulnerabilityAlerts on repository does not take a ref argument directly
+          GRAPHQL_QUERY='
+            query($owner: String!, $repo: String!) {
               repository(owner: $owner, name: $repo) {
-                vulnerabilityAlerts(first: 100, states: OPEN, after: null) {
+                vulnerabilityAlerts(first: 100, states: OPEN) { # Filter for OPEN alerts
                   nodes {
                     createdAt
                     securityVulnerability {
@@ -137,26 +138,41 @@ jobs:
                       package { name }
                     }
                     state
-                    dismissedAt
-                    dismissedBy { login }
-                    dismissedReason
                   }
                 }
               }
-            }' -F owner='${{ github.repository_owner }}' -F repo='${{ github.event.repository.name }}' -F ref='${{ github.ref }}' | jq -r '.data.repository.vulnerabilityAlerts.nodes[] | select(.state == "OPEN" and (.securityVulnerability.severity == "CRITICAL" or .securityVulnerability.severity == "HIGH"))')
+            }
+          '
+
+          # Execute the gh api graphql command with -v for variables
+          # Store the full response to handle potential errors/nulls
+          FULL_API_RESPONSE=$(gh api graphql \
+            -f query="$GRAPHQL_QUERY" \
+            -v owner="${{ github.repository_owner }}" \
+            -v repo="${{ github.event.repository.name }}")
+
+          # Check for GraphQL errors in the response
+          if echo "$FULL_API_RESPONSE" | jq -e '.errors' > /dev/null; then
+            echo "::error::GraphQL API call failed with errors:"
+            echo "$FULL_API_RESPONSE"
+            exit 1
+          fi
+
+          # Use jq to extract and filter alerts, robustly handling null/empty nodes
+          ALERTS=$(echo "$FULL_API_RESPONSE" | jq -r '.data.repository.vulnerabilityAlerts.nodes // [] | .[] | select(.securityVulnerability.severity == "CRITICAL" or .securityVulnerability.severity == "HIGH")')
 
           if [ -n "$ALERTS" ]; then
             echo "::error::Critical or High vulnerabilities found!"
             echo "Vulnerabilities detected:"
             echo "$ALERTS"
-            echo "::set-output name=vulnerabilities_found::true"
-            exit 1 # Fail the job if vulnerabilities are found
+            echo "::set-output name=vulnerabilities_found::true" # Set output for subsequent jobs
+            exit 1 # Fail the job
           else
             echo "No open Critical or High vulnerabilities found."
-            echo "::set-output name=vulnerabilities_found::false"
+            echo "::set-output name=vulnerabilities_found::false" # Set output
           fi
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # GITHUB_TOKEN is automatically provided with necessary permissions
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   deploy:
     permissions:
       contents: none
