@@ -12,6 +12,7 @@ env:
 
 permissions:
   contents: read
+  issues: write
 
 jobs:
   snyk:
